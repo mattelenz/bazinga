@@ -75,6 +75,9 @@ class RPS(commands.Cog):
         choice = choice.lower()
 
         # make sure the user chose a real option
+        if interaction.user.mention == opponent.mention:
+            await interaction.response.send_message("Find a friend to challenge or use the /play command to challenge the bot!")
+        
         if choice not in self.choices:
             await interaction.response.send_message("Invalid choice! Choose rock, paper, scissors, fire, sponge, air, or water.", ephemeral=True)
             return

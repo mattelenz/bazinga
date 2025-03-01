@@ -24,13 +24,16 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 async def on_ready():
     print(f'Logged on as {bot.user}!')
     await load_extension()
+    # sync extensions with discord
     try:
         synced = await bot.tree.sync()
         print(f"Synced {len(synced)} command(s) globally")
+    # error check
     except Exception as e:
         print(f"Error syncing commands: {e}")
 
 
+# load cog files
 async def load_extension():
     for filename in os.listdir('./cogs'):
         if filename.endswith('.py'):
@@ -41,6 +44,7 @@ async def load_extension():
                 try:
                     await bot.load_extension(f'cogs.{cog_name}')
                     print(f'Loaded extension {cog_name}.')
+                # error check
                 except Exception as e:
                     print(f'Failed to load extension {cog_name}: {e}')
 
