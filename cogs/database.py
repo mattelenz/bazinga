@@ -2,6 +2,7 @@ import sqlite3
 from discord.ext import commands
 from discord import app_commands
 import discord
+from discord import Interaction
 
 class DatabaseCog(commands.Cog):
     def __init__(self, bot):
@@ -24,7 +25,7 @@ class DatabaseCog(commands.Cog):
     def add_member(self, member_id):
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
-        cursor.execute('INSERT OR IGNORE INTO members (member_id) VALUES (?)' (member_id,))
+        cursor.execute('INSERT OR IGNORE INTO members (member_id) VALUES (?)', (member_id,))
         conn.commit()
         conn.close()
 
@@ -49,7 +50,7 @@ class DatabaseCog(commands.Cog):
         return self.get_currency(member_id)
 
     @app_commands.command(name="balance", description="Check your current coin balance.")
-    async def check_balance(self, interaction: discord.interaction):
+    async def check_balance(self, interaction: discord.Interaction):
         member_id = interaction.user.id
         self.add_member(member_id)
         balance = self.get_currency(member_id)
@@ -59,7 +60,7 @@ class DatabaseCog(commands.Cog):
     @app_commands.describe(member="Which user was a good boy?")
     async def award_currency(self, interaction: discord.Interaction, member: discord.Member):
         if member.id == interaction.user.id:
-            await interaction.response.send_message(f"{interaction.user.id} tried to reward themselves with currency. Greedy fuck.")
+            await interaction.response.send_message(f"{interaction.user.display_name} tried to reward themselves with currency. Greedy fuck.")
             return
         
         reward_amount = 100

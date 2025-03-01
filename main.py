@@ -5,6 +5,7 @@ import random
 from discord.ext import commands
 from discord import app_commands
 from dotenv import load_dotenv
+from discord import Interaction
 
 # Load bot token from somewhere safe (a hidden env file)
 load_dotenv()
