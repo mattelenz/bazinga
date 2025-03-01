@@ -51,8 +51,11 @@ class RPS(commands.Cog):
 
     # define vs. bot slash command
     @app_commands.command(name="play", description="Play 7 choice rock/paper/scissors against the bot.")
-    @app_commands.describe(choice="Your choice: rock, paper, scissors, fire, sponge, air, or water.")
-    async def play(self, interaction: discord.Interaction, choice: str):
+    @app_commands.describe(
+        choice="Your choice: rock, paper, scissors, fire, sponge, air, or water.",
+        bet="Optional: Amount of coins to bet."
+    )
+    async def play(self, interaction: discord.Interaction, choice: str, bet: int = 0):
         # cast to lower to avoid case sensitivity
         choice = choice.lower()
 
@@ -60,10 +63,30 @@ class RPS(commands.Cog):
         if choice not in self.choices:
             await interaction.response.send_message("Invalid choice! Choose rock, paper, scissors, fire, sponge, air, or water.", ephemeral=True)
             return
+        
+        db_cog = self.bot.get_cog("DatabaseCog")
+
+        if bet > 0:
+            user_currency = db_cog.get_currency(interaction.user.id)
+
+            if user_currency < bet:
+                await interaction.response.send_message("You don't have enough coins to bet that amount. Use the /balance command to see how many coins you have.", ephemeral=True)
+                return
         # randomize a bot choice
         bot_choice = random.choice(self.choices)
         # pass variable to winner function to pick a winner
         bot_winner = self.pick_winner(choice, bot_choice, interaction.user.display_name, self.bot.user.display_name)
+
+        if bet > 0:
+            if f"**{interaction.user.display_name}** wins" in bot_winner:
+                db_cog.update_currency(interaction.user.id, bet)
+                bot_winner += f"\nYou won {bet} coins!"
+            elif f"**{self.bot.user.display_name}** wins" in bot_winner:
+                db_cog.update_currency(interaction.user.id, -bet)
+                bot_winner += f"\nYou lost {bet} coins! Big stink."
+            else:
+                bot_winner += f"\n{bet} coins were on the line. No coins were exchanged."
+                
         # post the winner
         await interaction.response.send_message(bot_winner)
 
