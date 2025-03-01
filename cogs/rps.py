@@ -69,8 +69,12 @@ class RPS(commands.Cog):
 
     # define vs. player slash command
     @app_commands.command(name="challenge", description="Play 7 choice rock/paper/scissors against another player")
-    @app_commands.describe(opponent="The user you want to challenge", choice="Your choice: rock, paper, scissors, fire, sponge, air , or water")
-    async def challenge(self, interaction: discord.Interaction, opponent: discord.Member, choice: str):
+    @app_commands.describe(
+        opponent="The user you want to challenge",
+        choice="Your choice: rock, paper, scissors, fire, sponge, air , or water",
+        bet="Optional: Amount of coins to bet."
+        )
+    async def challenge(self, interaction: discord.Interaction, opponent: discord.Member, choice: str, bet: int = 0):
         # cast to lower to avoid case sensitivity
         choice = choice.lower()
 
@@ -82,11 +86,31 @@ class RPS(commands.Cog):
             await interaction.response.send_message("Invalid choice! Choose rock, paper, scissors, fire, sponge, air, or water.", ephemeral=True)
             return
         
-        # sends a message to the opponent
-        await interaction.response.send_message(
-            f"{interaction.user.mention} has challenged {opponent.mention} to rock/paper/scissors! "
-            f"{opponent.mention}, type your choice ( 'rock', 'paper', 'scissors', 'fire', 'sponge', 'air', or 'water')."
-        )
+        if bet > 0:
+            db_cog = self.bot.get_cog("DatabseCog")
+            user_currency = db_cog.get_currency(interaction.user.id)
+            opponent_currency = db_cog.get_currency(opponent.id)
+
+            if user_currency < bet:
+                await interaction.response.send_message("You don't have enough coins to bet that amount. Use the /balance command to see how many coins you have.", ephemeral=True)
+                return
+            
+            if opponent_currency < bet:
+                await interaction.response.send_message("Your opponent doesn't have enough coins to bet that amount.", ephemeral=True)
+                await interaction.followup.send(f"{interaction.user.mention} challenged you to RPS but their bet was more than your entire net worth. Unlucker.", ephemeral=True)
+                return
+            
+            await interaction.response.send_message(
+                f"{interaction.user.mention} has challenged {opponent.mention} to rock/paper/scissors! "
+                f"{opponent.mention}, type your choice ( 'rock', 'paper', 'scissors', 'fire', 'sponge', 'air', or 'water')."
+            )
+
+        else:
+            # sends a message to the opponent
+            await interaction.response.send_message(
+                f"{interaction.user.mention} has challenged {opponent.mention} to rock/paper/scissors! "
+                f"{opponent.mention}, type your choice ( 'rock', 'paper', 'scissors', 'fire', 'sponge', 'air', or 'water')."
+            )
 
         # make sure the opponent chose a real option
         def check(message):
@@ -100,6 +124,16 @@ class RPS(commands.Cog):
         
         # determine the winner
         result = self.pick_winner(choice, opponent_choice, interaction.user.display_name, opponent.display_name)
+
+        if bet > 0:
+            if f"**{interaction.user.display_name}** wins" in result:
+                db_cog.update_currency(interaction.user.id, bet)
+                db_cog.update_currency(opponent.id, -bet)
+                result += f"\n{interaction.user.mention} wins {bet} coins!"
+            elif f"**{opponent.display_name}** wins" in result:
+                db_cog.update_currency(interaction.user.id, -bet)
+                db_cog.update_currency(opponent.id, bet)
+                result += f"\n{opponent.mention} wins {bet} coins!"
 
         # send the winner
         await interaction.followup.send(result)
