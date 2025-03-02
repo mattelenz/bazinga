@@ -104,7 +104,7 @@ class RPS(commands.Cog):
 
         # make sure the user chose a real option
         if interaction.user.mention == opponent.mention:
-            await interaction.response.send_message("Find a friend to challenge or use the /play command to challenge the bot!")
+            await interaction.response.send_message("Find a friend to challenge or use the /play command to challenge the bot!", ephemeral=True)
         
         if choice not in self.choices:
             await interaction.response.send_message("Invalid choice! Choose rock, paper, scissors, fire, sponge, air, or water.", ephemeral=True)
@@ -126,14 +126,16 @@ class RPS(commands.Cog):
             
             await interaction.response.send_message(
                 f"{interaction.user.mention} has challenged {opponent.mention} to rock/paper/scissors! "
-                f"{opponent.mention}, type your choice ( 'rock', 'paper', 'scissors', 'fire', 'sponge', 'air', or 'water')."
+                f"{opponent.mention}, type your choice ( 'rock', 'paper', 'scissors', 'fire', 'sponge', 'air', or 'water').",
+                ephemeral=True
             )
 
         else:
             # sends a message to the opponent
             await interaction.response.send_message(
                 f"{interaction.user.mention} has challenged {opponent.mention} to rock/paper/scissors! "
-                f"{opponent.mention}, type your choice ( 'rock', 'paper', 'scissors', 'fire', 'sponge', 'air', or 'water')."
+                f"{opponent.mention}, type your choice ( 'rock', 'paper', 'scissors', 'fire', 'sponge', 'air', or 'water').",
+                ephemeral=True
             )
 
         # make sure the opponent chose a real option
@@ -143,7 +145,7 @@ class RPS(commands.Cog):
             opponent_choice_msg = await self.bot.wait_for('message', timeout=60.0, check=check)
             opponent_choice = opponent_choice_msg.content.lower()
         except asyncio.TimeoutError:
-            await interaction.followup.send(f"{opponent.mention} took too long to respond. Challenge canceled.")
+            await interaction.followup.send(f"{opponent.mention} took too long to respond. Challenge canceled.", ephemeral=True)
             return
         
         # determine the winner
