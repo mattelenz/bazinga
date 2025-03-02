@@ -4,11 +4,13 @@ from discord import app_commands
 import discord
 from discord import Interaction
 
+# load the cog so main can use it
 class DatabaseCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.initialize_database()
 
+    # start the database file and create a db if one doesn't exist
     def initialize_database(self):
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
@@ -22,6 +24,7 @@ class DatabaseCog(commands.Cog):
         conn.commit()
         conn.close()
 
+    # add a member to the databse
     def add_member(self, member_id):
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
@@ -29,6 +32,7 @@ class DatabaseCog(commands.Cog):
         conn.commit()
         conn.close()
 
+    # update a member's currency
     def update_currency(self, member_id, amount):
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
@@ -36,6 +40,7 @@ class DatabaseCog(commands.Cog):
         conn.commit()
         conn.close()
 
+    # get a member's coin amount
     def get_currency(self, member_id):
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
@@ -44,11 +49,13 @@ class DatabaseCog(commands.Cog):
         conn.close
         return result[0] if result else 0
 
+    # helper function for the award command
     def reward_user(self, member_id, amount):
         self.add_member(member_id)
         self.update_currency(member_id, amount)
         return self.get_currency(member_id)
 
+    # balance slash command - lets a member check their balance
     @app_commands.command(name="balance", description="Check your current coin balance.")
     async def check_balance(self, interaction: discord.Interaction):
         member_id = interaction.user.id
@@ -56,6 +63,7 @@ class DatabaseCog(commands.Cog):
         balance = self.get_currency(member_id)
         await interaction.response.send_message(f"You have {balance} coins!")
 
+    # award a member a set amount of coins
     @app_commands.command(name="award", description="Award some coins to a good boy.")
     @app_commands.describe(member="Which user was a good boy?")
     async def award_currency(self, interaction: discord.Interaction, member: discord.Member):
