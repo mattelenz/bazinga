@@ -85,7 +85,7 @@ class DatabaseCog(commands.Cog):
     @app_commands.describe(member="Which user was a good boy?")
     async def award_currency(self, interaction: discord.Interaction, member: discord.Member):
         if member.id == interaction.user.id:
-            await interaction.response.send_message(f"{interaction.user.display_name} tried to reward themselves with currency. Greedy fuck.")
+            await interaction.response.send_message(f"{interaction.user.display_name} tried to reward themselves with currency. Greedy.")
             return
         
         reward_amount = 100
