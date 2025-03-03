@@ -4,7 +4,7 @@ from discord import app_commands
 import discord
 
 class BlackjackView(discord.ui.View):
-    def __init__(self, player, player_hand, dealer_hand, deck, bet, db_cog):
+    def __init__(self, player, player_hand, dealer_hand, deck, bet, db_cog, bot):
         super().__init__(timeout=60)
         self.player = player
         self.player_hand = player_hand
@@ -13,6 +13,7 @@ class BlackjackView(discord.ui.View):
         self.bet = bet
         self.db_cog = db_cog
         self.message = None
+        self.bot = bot
 
     def calculate_hand(self, hand):
         total = 0
@@ -34,15 +35,38 @@ class BlackjackView(discord.ui.View):
         return total
     
     async def end_game(self, interaction, result_message, announce_result=True):
+        
         for child in self.children:
             child.disabled = True
-        await interaction.message.edit(content=result_message, view=self)
+        
+        try:
+            await interaction.edit_original_response(content=result_message, view=self)
+        
+        except Exception as e:
+            print(f"Error updating response: {e}")
+            
+            if self.message:
+                await self.message.edit(content=result_message, view=self)
+        
         if announce_result:
-            result_summary = result_message.split('!')[0] + '!'
-            await interaction.channel.send(
-                f"**Blackjack Results**\n"
-                f"{self.player.mention} {result_summary} {self.bet} currency."
-            )
+            result_summary = result_message.split('!')[0]# + '!'
+            
+            try:
+                channel_id = interaction.channel.id
+                channel = self.player.guild.get_channel(channel_id) or await self.player.guild.fetch_channel(channel_id)
+                
+                if channel:
+                    await channel.send(
+                        f"**Blackjack Results**\n"
+                        f"{self.player.mention} {result_summary} {self.bet} currency.",
+                    )
+
+                else:
+                    print(f"Could not find channel with ID {channel_id}")
+
+            except Exception as e:
+                print(f"Error sending announcement: {e}")
+
         self.stop()
 
     async def on_timeout(self):
@@ -70,16 +94,16 @@ class BlackjackView(discord.ui.View):
             await interaction.response.send_message("This is not your game!", ephemeral=True)
             return
         
+        await interaction.response.defer(ephemeral=True)
+        
         self.player_hand.append(self.deck.pop())
         total = self.calculate_hand(self.player_hand)
 
         if total > 21:
             self.db_cog.update_currency(self.player.id, -self.bet)
-            await interaction.response.defer()
             await self.end_game(interaction, f"You busted! Your hand: {', '.join(self.player_hand)} (Total: {total})\nDealer wins!", True)
         else:
-            await interaction.response.defer()
-            await interaction.message.edit(
+            await interaction.edit_original_response(
                 content=f"Your hand: {', '.join(self.player_hand)} (Total: {total})\n"
                         f"Dealer's hand: {self.dealer_hand[0]}, [Hidden card]",
                 view=self
@@ -91,7 +115,7 @@ class BlackjackView(discord.ui.View):
             await interaction.response.send_message("This is not your game!", ephemeral=True)
             return
         
-        await interaction.response.defer()
+        await interaction.response.defer(ephemeral=True)
         
         while self.calculate_hand(self.dealer_hand) < 17:
             self.dealer_hand.append(self.deck.pop())
@@ -159,7 +183,7 @@ class Blackjack(commands.Cog):
         player_hand = [deck.pop(), deck.pop()]
         dealer_hand = [deck.pop(), deck.pop()]
 
-        view = BlackjackView(interaction.user, player_hand, dealer_hand, deck, bet, db_cog)
+        view = BlackjackView(interaction.user, player_hand, dealer_hand, deck, bet, db_cog, self.bot)
 
         await interaction.response.send_message(
             f"Your hand: {', '.join(player_hand)} (Total: {self.calculate_hand(player_hand)})\n"
