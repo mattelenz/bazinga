@@ -12,56 +12,73 @@ class DatabaseCog(commands.Cog):
 
     # start the database file and create a db if one doesn't exist
     def initialize_database(self):
-        conn = sqlite3.connect('database.db')
-        cursor = conn.cursor()
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS members (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                member_id INTEGER UNIQUE NOT NULL,
-                currency INTEGER DEFAULT 0    
-                       )
-        ''')
-        conn.commit()
-        conn.close()
+        try:
+            with sqlite3.connect('database.db') as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS members (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        member_id INTEGER UNIQUE NOT NULL,
+                        currency INTEGER DEFAULT 0    
+                            )
+                ''')
+                conn.commit()
+        except sqlite3.Error as e:
+            print(f"Database initialization error: {e}")
 
-    # add a member to the databse
+    # add a member to the database
     def add_member(self, member_id):
-        conn = sqlite3.connect('database.db')
-        cursor = conn.cursor()
-        cursor.execute('INSERT OR IGNORE INTO members (member_id) VALUES (?)', (member_id,))
-        conn.commit()
-        conn.close()
+        try:
+            with sqlite3.connect('database.db') as conn:
+                cursor = conn.cursor()
+                cursor.execute('INSERT OR IGNORE INTO members (member_id) VALUES (?)', (member_id,))
+                conn.commit()
+        except sqlite3.Error as e:
+            print(f"Database error in update_currency (member_id: {member_id}): {e}")
 
     # update a member's currency
     def update_currency(self, member_id, amount):
-        conn = sqlite3.connect('database.db')
-        cursor = conn.cursor()
-        cursor.execute('UPDATE members SET currency = currency + ? WHERE member_id = ?', (amount, member_id))
-        conn.commit()
-        conn.close()
+        try:
+            with sqlite3.connect('database.db') as conn:
+                cursor = conn.cursor()
+                cursor.execute('UPDATE members SET currency = currency + ? WHERE member_id = ?', (amount, member_id))
+                conn.commit()
+        except sqlite3.Error as e:
+            print(f"Database error in update_currency (member_id: {member_id}, amount: {amount}): {e}")
 
     # get a member's coin amount
     def get_currency(self, member_id):
-        conn = sqlite3.connect('database.db')
-        cursor = conn.cursor()
-        cursor.execute('SELECT currency FROM members WHERE member_id = ?', (member_id,))
-        result = cursor.fetchone()
-        conn.close
-        return result[0] if result else 0
+        try:
+            with sqlite3.connect('database.db') as conn:
+                cursor = conn.cursor()
+                cursor.execute('SELECT currency FROM members WHERE member_id = ?', (member_id,))
+                result = cursor.fetchone()
+                return result[0] if result else 0
+        except sqlite3.Error as e:
+            print(f"Database error in get_currency: {e}")
+            return 0
 
     # helper function for the award command
     def reward_user(self, member_id, amount):
-        self.add_member(member_id)
-        self.update_currency(member_id, amount)
-        return self.get_currency(member_id)
+        try:
+            self.add_member(member_id)
+            self.update_currency(member_id, amount)
+            return self.get_currency(member_id)
+        except Exception as e:
+            print(f"Error in reward_user (member_id: {member_id}, amount: {amount}): {e}")
+            return 0
 
     # balance slash command - lets a member check their balance
     @app_commands.command(name="balance", description="Check your current coin balance.")
     async def check_balance(self, interaction: discord.Interaction):
         member_id = interaction.user.id
-        self.add_member(member_id)
-        balance = self.get_currency(member_id)
-        await interaction.response.send_message(f"You have {balance} coins!")
+        try:
+            self.add_member(member_id)
+            balance = self.get_currency(member_id)
+            await interaction.response.send_message(f"You have {balance} coins!")
+        except Exception as e:
+            print(f"Error in /balance command for (member_id: {member_id}): {e}")
+            await interaction.response.send_message("An error occured while retrieving your balance. Please try again later.", ephemeral=True)
 
     # award a member a set amount of coins
     @app_commands.command(name="award", description="Award some coins to a good boy.")
@@ -72,15 +89,19 @@ class DatabaseCog(commands.Cog):
             return
         
         reward_amount = 100
-        new_balance = self.reward_user(member.id, reward_amount)
-        await interaction.response.send_message(
-            f"{interaction.user.mention} has rewarded {member.mention} with {reward_amount} coins!"
-        )
+        try:
+            new_balance = self.reward_user(member.id, reward_amount)
+            await interaction.response.send_message(
+                f"{interaction.user.mention} has rewarded {member.mention} with {reward_amount} coins!"
+            )
 
-        await interaction.followup.send(
-            f"Your new balance is {new_balance} coins!",
-            ephemeral=True
-        )
+            await interaction.followup.send(
+                f"Your new balance is {new_balance} coins!",
+                ephemeral=True
+            )
+        except Exception as e:
+            print(f"Error in /award command for (member_id {member.id}): {e}")
+            await interaction.response.send_message("An error occured while awarding coins. Please try again later.", ephemeral=True)
 
     
 async def setup(bot):

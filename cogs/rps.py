@@ -111,7 +111,7 @@ class RPS(commands.Cog):
             return
         
         if bet > 0:
-            db_cog = self.bot.get_cog("DatabseCog")
+            db_cog = self.bot.get_cog("DatabaseCog")
             user_currency = db_cog.get_currency(interaction.user.id)
             opponent_currency = db_cog.get_currency(opponent.id)
 
