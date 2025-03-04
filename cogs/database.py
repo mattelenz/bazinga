@@ -3,6 +3,12 @@ from discord.ext import commands
 from discord import app_commands
 import discord
 from discord import Interaction
+from dotenv import load_dotenv
+import os
+
+# load the user_id from env
+load_dotenv()
+owner_id = os.getenv('USER_ID')
 
 # load the cog so main can use it
 class DatabaseCog(commands.Cog):
@@ -84,11 +90,30 @@ class DatabaseCog(commands.Cog):
     @app_commands.command(name="award", description="Award some coins to a good boy.")
     @app_commands.describe(member="Which user was a good boy?")
     async def award_currency(self, interaction: discord.Interaction, member: discord.Member):
+    
+        reward_amount = 100
+
         if member.id == interaction.user.id:
-            await interaction.response.send_message(f"{interaction.user.display_name} tried to reward themselves with currency. Greedy.")
+            if interaction.user.id == owner_id:
+                try:
+                    new_balance = self.reward_user(member.id, reward_amount)
+                    await interaction.response.send_message(
+                        f"You've awarded yourself {reward_amount} coins.",
+                        ephemeral=True
+                    )
+
+                    await interaction.followup.send(
+                        f"Your new balance is {new_balance} coins!",
+                        ephemeral=True
+                    )
+                except Exception as e:
+                    print(f"Error in /award command for (member_id {member.id}: {e})")
+                    await interaction.response.send_message("An error occured while awarding coins. Please try again later.", ephemeral=True)
+            else:
+                await interaction.response.send_message(f"{interaction.user.display_name} tried to reward themselves with currency. Greedy.")
             return
         
-        reward_amount = 100
+        
         try:
             new_balance = self.reward_user(member.id, reward_amount)
             await interaction.response.send_message(
