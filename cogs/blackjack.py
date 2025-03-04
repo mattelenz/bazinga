@@ -182,7 +182,7 @@ class Blackjack(commands.Cog):
         
         user_currency = db_cog.get_currency(interaction.user.id)
         if bet > user_currency:
-            await interaction.response.send_message("You don't have enough $GBP to place that bet! Use /currency to find out how much you have.", ephemeral=True)
+            await interaction.response.send_message("You don't have enough $GBP to place that bet! Use /balance to find out how much you have.", ephemeral=True)
             return
         
         deck = self.create_deck()
