@@ -8,7 +8,7 @@ import os
 
 # load the user_id from env
 load_dotenv()
-owner_id = os.getenv('USER_ID')
+owner_id = int(os.getenv('USER_ID'))
 
 # load the cog so main can use it
 class DatabaseCog(commands.Cog):

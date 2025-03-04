@@ -49,7 +49,7 @@ class BlackjackView(discord.ui.View):
                 await self.message.edit(content=result_message, view=self)
         
         if announce_result:
-            result_summary = result_message.split('!')[0]# + '!'
+            result_summary = result_message.split('!')[0] + '!'
             
             try:
                 channel_id = interaction.channel.id
