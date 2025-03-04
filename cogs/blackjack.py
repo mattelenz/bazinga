@@ -56,9 +56,15 @@ class BlackjackView(discord.ui.View):
                 channel = self.player.guild.get_channel(channel_id) or await self.player.guild.fetch_channel(channel_id)
                 
                 if channel:
+                    if "won" in result_summary.lower() or "win" in result_summary.lower():
+                        bet_result = f"+{self.bet}"
+                    elif "lost" in result_summary.lower() or "lose" in result_summary.lower():
+                        bet_result = f"-{self.bet}"
+                    else:
+                        bet_result = f"{self.bet}"
                     await channel.send(
                         f"**Blackjack Results**\n"
-                        f"{self.player.mention} {result_summary} {self.bet} currency.",
+                        f"{self.player.mention} {result_summary} {bet_result} $GBP.",
                     )
 
                 else:
@@ -80,7 +86,7 @@ class BlackjackView(discord.ui.View):
 
         try:
             await self.message.edit(
-                content=f"Game timed out! No currency was lost.\n"
+                content=f"Game timed out! No $GBP was lost.\n"
                         f"Your hand: {', '.join(self.player_hand)} (Total: {player_total})\n"
                         f"Dealer's hand: {', '.join(self.dealer_hand)} (Total: {dealer_total})",
                 view=self
@@ -176,7 +182,7 @@ class Blackjack(commands.Cog):
         
         user_currency = db_cog.get_currency(interaction.user.id)
         if bet > user_currency:
-            await interaction.response.send_message("You don't have enough currency to place that bet! Use /currency to find out how much you have.", ephemeral=True)
+            await interaction.response.send_message("You don't have enough $GBP to place that bet! Use /currency to find out how much you have.", ephemeral=True)
             return
         
         deck = self.create_deck()

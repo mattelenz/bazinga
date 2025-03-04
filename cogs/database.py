@@ -52,7 +52,7 @@ class DatabaseCog(commands.Cog):
         except sqlite3.Error as e:
             print(f"Database error in update_currency (member_id: {member_id}, amount: {amount}): {e}")
 
-    # get a member's coin amount
+    # get a member's #GBP amount
     def get_currency(self, member_id):
         try:
             with sqlite3.connect('database.db') as conn:
@@ -76,19 +76,19 @@ class DatabaseCog(commands.Cog):
             return 0
 
     # balance slash command - lets a member check their balance
-    @app_commands.command(name="balance", description="Check your current coin balance.")
+    @app_commands.command(name="balance", description="Check your current $GBP balance.")
     async def check_balance(self, interaction: discord.Interaction):
         member_id = interaction.user.id
         try:
             self.add_member(member_id)
             balance = self.get_currency(member_id)
-            await interaction.response.send_message(f"You have {balance} coins!")
+            await interaction.response.send_message(f"You have {balance} $GBP!", ephemeral=True)
         except Exception as e:
             print(f"Error in /balance command for (member_id: {member_id}): {e}")
             await interaction.response.send_message("An error occured while retrieving your balance. Please try again later.", ephemeral=True)
 
-    # award a member a set amount of coins
-    @app_commands.command(name="award", description="Award some coins to a good boy.")
+    # award a member a set amount of $GBP
+    @app_commands.command(name="award", description="Award some $GBP to a good boy.")
     @app_commands.describe(member="Which user was a good boy?")
     async def award_currency(self, interaction: discord.Interaction, member: discord.Member):
     
@@ -99,35 +99,35 @@ class DatabaseCog(commands.Cog):
                 try:
                     new_balance = self.reward_user(member.id, reward_amount)
                     await interaction.response.send_message(
-                        f"You've awarded yourself {reward_amount} coins.",
+                        f"You've awarded yourself {reward_amount} #GBP.",
                         ephemeral=True
                     )
 
                     await interaction.followup.send(
-                        f"Your new balance is {new_balance} coins!",
+                        f"Your new balance is {new_balance} #GBP!",
                         ephemeral=True
                     )
                 except Exception as e:
                     print(f"Error in /award command for (member_id {member.id}: {e})")
-                    await interaction.response.send_message("An error occured while awarding coins. Please try again later.", ephemeral=True)
+                    await interaction.response.send_message("An error occured while awarding $GBP. Please try again later.", ephemeral=True)
             else:
-                await interaction.response.send_message(f"{interaction.user.display_name} tried to reward themselves with currency. Greedy.")
+                await interaction.response.send_message(f"{interaction.user.display_name} tried to reward themselves with $GBP. Greedy.")
             return
         
         
         try:
             new_balance = self.reward_user(member.id, reward_amount)
             await interaction.response.send_message(
-                f"{interaction.user.mention} has rewarded {member.mention} with {reward_amount} coins!"
+                f"{interaction.user.mention} has rewarded {member.mention} with {reward_amount} #GBP!"
             )
 
             await interaction.followup.send(
-                f"Your new balance is {new_balance} coins!",
+                f"Your new balance is {new_balance} $GBP!",
                 ephemeral=True
             )
         except Exception as e:
             print(f"Error in /award command for (member_id {member.id}): {e}")
-            await interaction.response.send_message("An error occured while awarding coins. Please try again later.", ephemeral=True)
+            await interaction.response.send_message("An error occured while awarding #GBP. Please try again later.", ephemeral=True)
 
     
 async def setup(bot):

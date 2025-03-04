@@ -51,10 +51,11 @@ class RPS(commands.Cog):
     # connect the cog to the bot(main)
 
     # define vs. bot slash command
+     # define vs. bot slash command
     @app_commands.command(name="play", description="Play 7 choice rock/paper/scissors against the bot.")
     @app_commands.describe(
         choice="Your choice: rock, paper, scissors, fire, sponge, air, or water.",
-        bet="Optional: Amount of coins to bet."
+        bet="Optional: Amount of $GBP to bet."
     )
     async def play(self, interaction: discord.Interaction, choice: str, bet: int = 0):
         # cast to lower to avoid case sensitivity
@@ -73,9 +74,9 @@ class RPS(commands.Cog):
         user_currency = db_cog.get_currency(interaction.user.id)
         if user_currency < bet:
             await interaction.response.send_message(
-                f"You don't have enough coins to bet {bet}."
-                f"Your current balance is {user_currency} coins."
-                "Use the /balance command to see your coins.",
+                f"You don't have enough $GBP to bet {bet}. "
+                f"Your current balance is {user_currency} $GBP. "
+                "Use the /balance command to see your $GBP.",
                 ephemeral=True
             )
             return
@@ -89,12 +90,12 @@ class RPS(commands.Cog):
             try:
                 if f"**{interaction.user.display_name}** wins" in bot_winner:
                     db_cog.update_currency(interaction.user.id, bet)
-                    bot_winner += f"\nYou won {bet} coins!"
+                    bot_winner += f"\n{interaction.user.display_name} won {bet} $GBP!"
                 elif f"**{self.bot.user.display_name}** wins" in bot_winner:
                     db_cog.update_currency(interaction.user.id, -bet)
-                    bot_winner += f"\nYou lost {bet} coins! Big stink."
+                    bot_winner += f"\n{interaction.user.display_name} lost {bet} #GBP! Big stink."
                 else:
-                    bot_winner += f"\n{bet} coins were on the line. No coins were exchanged."
+                    bot_winner += f"\n{bet} #GBP were on the line. No #GBP were exchanged."
             
             except Exception as e:
                 await interaction.response.send_message("An error occured while updating your balance. Please try again later.", ephemeral=True)
@@ -103,13 +104,13 @@ class RPS(commands.Cog):
                 
         # post the winner
         await interaction.response.send_message(bot_winner)
-
+        
     # define vs. player slash command
     @app_commands.command(name="challenge", description="Play 7 choice rock/paper/scissors against another player")
     @app_commands.describe(
         opponent="The user you want to challenge",
         choice="Your choice: rock, paper, scissors, fire, sponge, air , or water",
-        bet="Optional: Amount of coins to bet."
+        bet="Optional: Amount of $GBP to bet."
         )
     async def challenge(self, interaction: discord.Interaction, opponent: discord.Member, choice: str, bet: int = 0):
         # cast to lower to avoid case sensitivity
@@ -134,11 +135,11 @@ class RPS(commands.Cog):
                 return
 
             if user_currency < bet:
-                await interaction.response.send_message("You don't have enough coins to bet that amount. Use the /balance command to see how many coins you have.", ephemeral=True)
+                await interaction.response.send_message("You don't have enough $GBP to bet that amount. Use the /balance command to see how many $GBP you have.", ephemeral=True)
                 return
             
             if opponent_currency < bet:
-                await interaction.response.send_message("Your opponent doesn't have enough coins to bet that amount.", ephemeral=True)
+                await interaction.response.send_message("Your opponent doesn't have enough #GBP to bet that amount.", ephemeral=True)
                 await interaction.followup.send(f"{interaction.user.mention} challenged you to RPS but their bet was more than your entire net worth. Unlucker.", ephemeral=True)
                 return
             
@@ -174,11 +175,11 @@ class RPS(commands.Cog):
                 if f"**{interaction.user.display_name}** wins" in result:
                     db_cog.update_currency(interaction.user.id, bet)
                     db_cog.update_currency(opponent.id, -bet)
-                    result += f"\n{interaction.user.mention} wins {bet} coins!"
+                    result += f"\n{interaction.user.mention} wins {bet} $GBP!"
                 elif f"**{opponent.display_name}** wins" in result:
                     db_cog.update_currency(interaction.user.id, -bet)
                     db_cog.update_currency(opponent.id, bet)
-                    result += f"\n{opponent.mention} wins {bet} coins!"
+                    result += f"\n{opponent.mention} wins {bet} $GBP!"
             except Exception as e:
                 await interaction.followup.send("An error occured while updating balances. Please try again later.", ephemeral=True)
                 print(f"Error updating currency: {e}")
