@@ -68,8 +68,12 @@ class RPS(commands.Cog):
         db_cog = self.bot.get_cog("DatabaseCog")
 
         if bet > 0:
-            user_currency = db_cog.get_currency(interaction.user.id)
-
+            try:
+                user_currency = db_cog.get_currency(interaction.user.id)
+            except Exception as e:
+                await interaction.response.send_message("An error occured while retrieving your balance. Please try again later.", ephemeral=True)
+                print(f"Error retrieving currency: {e}")
+                return
             if user_currency < bet:
                 await interaction.response.send_message("You don't have enough coins to bet that amount. Use the /balance command to see how many coins you have.", ephemeral=True)
                 return
@@ -79,14 +83,21 @@ class RPS(commands.Cog):
         bot_winner = self.pick_winner(choice, bot_choice, interaction.user.display_name, self.bot.user.display_name)
 
         if bet > 0:
-            if f"**{interaction.user.display_name}** wins" in bot_winner:
-                db_cog.update_currency(interaction.user.id, bet)
-                bot_winner += f"\nYou won {bet} coins!"
-            elif f"**{self.bot.user.display_name}** wins" in bot_winner:
-                db_cog.update_currency(interaction.user.id, -bet)
-                bot_winner += f"\nYou lost {bet} coins! Big stink."
-            else:
-                bot_winner += f"\n{bet} coins were on the line. No coins were exchanged."
+            
+            try:
+                if f"**{interaction.user.display_name}** wins" in bot_winner:
+                    db_cog.update_currency(interaction.user.id, bet)
+                    bot_winner += f"\nYou won {bet} coins!"
+                elif f"**{self.bot.user.display_name}** wins" in bot_winner:
+                    db_cog.update_currency(interaction.user.id, -bet)
+                    bot_winner += f"\nYou lost {bet} coins! Big stink."
+                else:
+                    bot_winner += f"\n{bet} coins were on the line. No coins were exchanged."
+            
+            except Exception as e:
+                await interaction.response.send_message("An error occured while updating your balance. Please try again later.", ephemeral=True)
+                print(f"Error updating currency: {e}")
+                return
                 
         # post the winner
         await interaction.response.send_message(bot_winner)
@@ -110,10 +121,15 @@ class RPS(commands.Cog):
             await interaction.response.send_message("Invalid choice! Choose rock, paper, scissors, fire, sponge, air, or water.", ephemeral=True)
             return
         
+        db_cog = self.bot.get_cog("DatabaseCog")
         if bet > 0:
-            db_cog = self.bot.get_cog("DatabaseCog")
-            user_currency = db_cog.get_currency(interaction.user.id)
-            opponent_currency = db_cog.get_currency(opponent.id)
+            try:
+                user_currency = db_cog.get_currency(interaction.user.id)
+                opponent_currency = db_cog.get_currency(opponent.id)
+            except Exception as e:
+                await interaction.response.send_message("An error occured while retrieving balance. Please try again later.", ephemeral=True)
+                print(f"Error retrieving currency: {e}")
+                return
 
             if user_currency < bet:
                 await interaction.response.send_message("You don't have enough coins to bet that amount. Use the /balance command to see how many coins you have.", ephemeral=True)
@@ -152,14 +168,19 @@ class RPS(commands.Cog):
         result = self.pick_winner(choice, opponent_choice, interaction.user.display_name, opponent.display_name)
 
         if bet > 0:
-            if f"**{interaction.user.display_name}** wins" in result:
-                db_cog.update_currency(interaction.user.id, bet)
-                db_cog.update_currency(opponent.id, -bet)
-                result += f"\n{interaction.user.mention} wins {bet} coins!"
-            elif f"**{opponent.display_name}** wins" in result:
-                db_cog.update_currency(interaction.user.id, -bet)
-                db_cog.update_currency(opponent.id, bet)
-                result += f"\n{opponent.mention} wins {bet} coins!"
+            try:
+                if f"**{interaction.user.display_name}** wins" in result:
+                    db_cog.update_currency(interaction.user.id, bet)
+                    db_cog.update_currency(opponent.id, -bet)
+                    result += f"\n{interaction.user.mention} wins {bet} coins!"
+                elif f"**{opponent.display_name}** wins" in result:
+                    db_cog.update_currency(interaction.user.id, -bet)
+                    db_cog.update_currency(opponent.id, bet)
+                    result += f"\n{opponent.mention} wins {bet} coins!"
+            except Exception as e:
+                await interaction.followup.send("An error occured while updating balances. Please try again later.", ephemeral=True)
+                print(f"Error updating currency: {e}")
+                return
 
         # send the winner
         await interaction.followup.send(result)
