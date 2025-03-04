@@ -57,6 +57,7 @@ class DatabaseCog(commands.Cog):
         try:
             with sqlite3.connect('database.db') as conn:
                 cursor = conn.cursor()
+                cursor.execute('INSERT OR IGNORE INTO members (member_id) VALUES (?)', (member_id,))
                 cursor.execute('SELECT currency FROM members WHERE member_id = ?', (member_id,))
                 result = cursor.fetchone()
                 return result[0] if result else 0

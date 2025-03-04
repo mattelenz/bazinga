@@ -66,24 +66,26 @@ class RPS(commands.Cog):
             return
         
         db_cog = self.bot.get_cog("DatabaseCog")
-
-        if bet > 0:
-            try:
-                user_currency = db_cog.get_currency(interaction.user.id)
-            except Exception as e:
-                await interaction.response.send_message("An error occured while retrieving your balance. Please try again later.", ephemeral=True)
-                print(f"Error retrieving currency: {e}")
-                return
-            if user_currency < bet:
-                await interaction.response.send_message("You don't have enough coins to bet that amount. Use the /balance command to see how many coins you have.", ephemeral=True)
-                return
+        if not db_cog:
+            await interaction.response.send_message("Database system is unavailable.", ephemeral=True)
+            return
+        
+        user_currency = db_cog.get_currency(interaction.user.id)
+        if user_currency < bet:
+            await interaction.response.send_message(
+                f"You don't have enough coins to bet {bet}."
+                f"Your current balance is {user_currency} coins."
+                "Use the /balance command to see your coins.",
+                ephemeral=True
+            )
+            return
+            
         # randomize a bot choice
         bot_choice = random.choice(self.choices)
         # pass variable to winner function to pick a winner
         bot_winner = self.pick_winner(choice, bot_choice, interaction.user.display_name, self.bot.user.display_name)
 
         if bet > 0:
-            
             try:
                 if f"**{interaction.user.display_name}** wins" in bot_winner:
                     db_cog.update_currency(interaction.user.id, bet)
