@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-import requests
 import aiohttp
 import os
 
@@ -21,16 +20,15 @@ class Cat(commands.Cog):
             try:
                 async with session.get('https://api.thecatapi.com/v1/images/search', headers=headers) as response:
                     if response.status != 200:
-                        await interaction.followup.send("Sorry, I couldn't fetch a cat pic right now. Try again later.")
+                        await interaction.followup.send("Sorry, I couldn't fetch a cat pic right now. Please try again later.")
                         return
-          
+                    
                     data = await response.json()
                     if not data:
                         await interaction.followup.send("Sorry, I couldn't find a cat picture.")
                         return
-            
+                    
                     cat_image_url = data[0]['url']
-                    breed_info = "No breed info available."
                     await interaction.followup.send(cat_image_url)
             except aiohttp.ClientError as e:
                 print(f"Error fetching cat image: {e}")
