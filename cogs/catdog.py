@@ -11,7 +11,7 @@ class Catdog(commands.Cog):
         self.dog_api_key = os.getenv('DOG_API_KEY')
 
     @app_commands.command(name="dog", description="Get a random dog picture!")
-    async def cat(self, interaction: discord.Interaction):
+    async def dog(self, interaction: discord.Interaction):
         await interaction.response.defer()
 
         headers = {
