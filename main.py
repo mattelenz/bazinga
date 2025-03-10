@@ -30,7 +30,7 @@ async def on_ready():
         synced = await bot.tree.sync()
         print(f"Synced {len(synced)} command(s) globally")
     # error check
-    except discord.erros.DiscordException as e:
+    except discord.errors.DiscordException as e:
         print(f"Discord error syncing commands: {e}")
     except Exception as e:
         print(f"Error syncing commands: {e}")

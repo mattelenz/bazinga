@@ -48,10 +48,7 @@ class RPS(commands.Cog):
             )
 
 
-    # connect the cog to the bot(main)
-
     # define vs. bot slash command
-     # define vs. bot slash command
     @app_commands.command(name="play", description="Play 7 choice rock/paper/scissors against the bot.")
     @app_commands.describe(
         choice="Your choice: rock, paper, scissors, fire, sponge, air, or water.",
