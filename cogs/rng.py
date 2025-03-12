@@ -48,11 +48,11 @@ class rng(commands.Cog):
     @app_commands.describe(choice="Choose how many sides the die should have.")
     async def diceroll(self, interaction: discord.Interaction, choice: int):
         if choice <= 1:
-            await interaction.response.send_message("Please choose a positive number greater than 1.")
+            await interaction.response.send_message("Please choose a positive number greater than 1.", ephemeral=True)
             return
         
         random_number = random.randint(1, choice)
-        await interaction.response.send_message(f"I rolled a(n) {random_number}")
+        await interaction.response.send_message(f"I rolled {random_number} on a d{choice}.")
         return
 
 

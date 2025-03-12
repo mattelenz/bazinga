@@ -58,7 +58,7 @@ class BlackjackView(discord.ui.View):
                 if channel:
                     if "won" in result_summary.lower() or "win" in result_summary.lower():
                         bet_result = f"+{self.bet}"
-                    elif "lost" in result_summary.lower() or "lose" in result_summary.lower():
+                    elif "lost" in result_summary.lower() or "lose" in result_summary.lower() or "busted" in result_summary.lower():
                         bet_result = f"-{self.bet}"
                     else:
                         bet_result = f"{self.bet}"
