@@ -2,7 +2,6 @@ import sqlite3
 from discord.ext import commands
 from discord import app_commands
 import discord
-from discord import Interaction
 from dotenv import load_dotenv
 import os
 

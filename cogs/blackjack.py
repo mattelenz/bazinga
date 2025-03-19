@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord import app_commands
 import discord
 
+# using View to add buttons to the messages
 class BlackjackView(discord.ui.View):
     def __init__(self, player, player_hand, dealer_hand, deck, bet, db_cog, bot):
         super().__init__(timeout=60)
@@ -15,6 +16,7 @@ class BlackjackView(discord.ui.View):
         self.message = None
         self.bot = bot
 
+    # calculate the score for the current hand
     def calculate_hand(self, hand):
         total = 0
         aces = 0
@@ -28,17 +30,21 @@ class BlackjackView(discord.ui.View):
             if value == 'A':
                 aces += 1
 
+        # deal with aces being 1 or 11
         while total > 21 and aces:
             total -= 10
             aces -= 1
         
         return total
     
+    # function to end the game and return text with the winner
     async def end_game(self, interaction, result_message, announce_result=True):
         
+        # disables the chat buttons
         for child in self.children:
             child.disabled = True
         
+        # edit the message with the game results
         try:
             await interaction.edit_original_response(content=result_message, view=self)
         
@@ -51,10 +57,12 @@ class BlackjackView(discord.ui.View):
         if announce_result:
             result_summary = result_message.split('!')[0] + '!'
             
+            # used a try here since there was an error with the bot not sending the message in the right channel
             try:
                 channel_id = interaction.channel.id
                 channel = self.player.guild.get_channel(channel_id) or await self.player.guild.fetch_channel(channel_id)
                 
+                # determine whether it was a win or loss and +/- currency
                 if channel:
                     if "won" in result_summary.lower() or "win" in result_summary.lower():
                         bet_result = f"+{self.bet}"
@@ -75,6 +83,7 @@ class BlackjackView(discord.ui.View):
 
         self.stop()
 
+    # making sure currency isn't lost if the game times out
     async def on_timeout(self):
         player_total = self.calculate_hand(self.player_hand)
         dealer_total = self.calculate_hand(self.dealer_hand)
@@ -94,6 +103,7 @@ class BlackjackView(discord.ui.View):
         except:
             pass
 
+    # hit ui button
     @discord.ui.button(label="Hit", style=discord.ButtonStyle.green)
     async def hit(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user != self.player:
@@ -102,9 +112,11 @@ class BlackjackView(discord.ui.View):
         
         await interaction.response.defer(ephemeral=True)
         
+        # if the user presses hit, pop a card off the stack
         self.player_hand.append(self.deck.pop())
         total = self.calculate_hand(self.player_hand)
 
+        # determine a bust
         if total > 21:
             self.db_cog.update_currency(self.player.id, -self.bet)
             await self.end_game(interaction, f"You busted! Your hand: {', '.join(self.player_hand)} (Total: {total})\nDealer wins!", True)
@@ -115,6 +127,7 @@ class BlackjackView(discord.ui.View):
                 view=self
             )
 
+    # stand ui button, works very much the same as Hit
     @discord.ui.button(label='Stand', style=discord.ButtonStyle.red)
     async def stand(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user != self.player:
@@ -143,10 +156,12 @@ class BlackjackView(discord.ui.View):
         
         await self.end_game(interaction, result, True)
 
+# running the actual game
 class Blackjack(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    # making a deck with our lists
     def create_deck(self):
         suits = ['hearts', 'diamonds', 'clubs', 'spades']
         values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
@@ -154,6 +169,7 @@ class Blackjack(commands.Cog):
         random.shuffle(deck)
         return deck
 
+    # calculates the hand, same logic as above
     def calculate_hand(self, hand):
         total = 0
         aces = 0
@@ -173,24 +189,32 @@ class Blackjack(commands.Cog):
         
         return total
     
+    # creating the blackjack slash command
     @app_commands.command(name="blackjack", description="Play a game of blackjack against the bot!")
     async def blackjack(self, interaction: discord.Interaction, bet: int):
+        # load the db
         db_cog = self.bot.get_cog("DatabaseCog")
+        # error check the db
         if not db_cog:
             await interaction.response.send_message("Database cog not loaded", ephemeral=True)
             return
         
+        # get the user's currency amount
         user_currency = db_cog.get_currency(interaction.user.id)
+        # error check the bet
         if bet > user_currency:
             await interaction.response.send_message("You don't have enough $GBP to place that bet! Use /balance to find out how much you have.", ephemeral=True)
             return
         
+        # deal the cards
         deck = self.create_deck()
         player_hand = [deck.pop(), deck.pop()]
         dealer_hand = [deck.pop(), deck.pop()]
 
+        # create the view to have buttons in the bot messages for hit/stand
         view = BlackjackView(interaction.user, player_hand, dealer_hand, deck, bet, db_cog, self.bot)
 
+        # update the view to show the player's/bot's current standing
         await interaction.response.send_message(
             f"Your hand: {', '.join(player_hand)} (Total: {self.calculate_hand(player_hand)})\n"
             f"Dealer's hand: {dealer_hand[0]}, [Hidden card]",
