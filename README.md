@@ -1,2 +1,19 @@
-# bazinga
-A little discord bot to mess around with
+# The Little Guy
+#### Video Demo: https://youtu.be/EVafbaxydBA
+#### Description: This is a little discord bot that can play a few different games, mostly related around gambling and buying rewards. It started out with just rock/paper/scissors and grew from there into a gambling bot that my friend can use the buy a night of playing Lethal Company. Which sounds wildly stupid, but it gave motivation to learn new things.
+
+#### Starting with main.py, we load in some environment variables like the bot key. I also decided to opt for a more modular approach to run the bot so we use a cog system to load individual modules. This is helpful since we can add and remove parts of the program without affecting the entire bot. Within main we start the bot, load the cogs, and receive updates on the bot status within the terminal window. We then have a number of cogs - blackjack, catdog, database, help, rewards, rng, rps.
+
+#### The database cog contains all of our database helper functions and a couple slash commands that interact only with the database, such as checking your own currency, or rewarding others with currency ($GBP - Good Boy Points - for the time being). The helper functions obtain a user's currency amount, or updates their currency amount. It also will self-initialize the database if it tries to add information to one and it doesn't exist.
+
+#### The blackjack cog plays blackjack! It can only play singular matches vs the bot so it isn't true blackjack - I don't think your card counting will help you here. But it does follow the blackjack rules, the deck just isn't persistent. It uses the View feature in discord to add buttons into chat messages from the bot so you can just press the hit/stand buttons without having to type it every time. All of the other games in this bot only really require user input up front but blackjack requires more consistent input over the course of the game so the buttons made a lot more sense in this cog. They also make another appearance in the rewards cog.
+
+#### The catdog cog uses the FreeCatAPI and the FreeDogAPI to get pictures and then post them in the chat. I wanted to get a bit more understanding of how an api works and these ones are extremely simple to understand. This is a pretty simple cog and the cat command is nearly identical to the dog command.
+
+#### The help cog is there so user's can understand what the bot does easier. It just contains a list of all the commands the bot can use with a description of what they do. It then sends the list to whichever user used the command. There is a lot of usage of ephemeral messages in this bot since I didn't want the actual discord chat channel to get clogged up with bot messages.
+
+#### The reward cog allows users to see and pick rewards using the currency they have earned. This uses the View setup that was also used in the blackjack cog. Buttons felt a lot cooler than just typing in what reward you want, it makes it feel a bit more gamey I think. Currently there aren't actual amounts for the rewards but that will require a bit more usage of the bot to figure out where the prices should be.
+
+#### The rng cog was made just for randomness. Think like a dice roll or a coin flip and possibly more things in the future. The dice roll is really just choosing a random number within a range but a dice roll is a better vibe.
+
+#### The rps cog was where the bot started out. I wanted something a little more complicated than 3-way RPS so went with a 7-way version that adds a little more fun and complexity. It could be recreated using the View creation and the buttons like in blackjack or the rewards cogs. It might make choosing an option easier but I think it was good to also learn how to do it this way as well.

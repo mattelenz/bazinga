@@ -13,10 +13,6 @@ class RPS(commands.Cog):
         self.bot = bot
         self.choices = ["rock", "paper", "scissors", "fire", "sponge", "air", "water"]
 
-#  ============================
-#  START Rock Paper Scissors
-#  ============================
-
     # pick winner function
     def pick_winner(self, player1_choice, player2_choice, player1_name, player2_name):
         # determine a tie
@@ -187,9 +183,6 @@ class RPS(commands.Cog):
         # send the winner
         await interaction.followup.send(result)
 
-#  ============================
-#  END Rock Paper Scissors
-#  ============================
 
 async def setup(bot):
     await bot.add_cog(RPS(bot))
